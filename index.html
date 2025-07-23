@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مسابقة جدول الضرب</title>
+    
+    <!-- خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- html2canvas للشهادة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            direction: rtl;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .quiz-header {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e5e9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .question-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #question-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .answer-btn {
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            border: 3px solid #e1e5e9;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .answer-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .answer-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .answer-btn.wrong {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .quiz-controls {
+            text-align: center;
+        }
+
+        .results-container {
+            text-align: center;
+        }
+
+        .results-container h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .score-summary {
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .score-circle span {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        #score-message {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .results-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .certificate-container {
+            text-align: center;
+        }
+
+        .certificate {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 5px solid #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .certificate::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 2px solid #764ba2;
+            border-radius: 15px;
+        }
+
+        .certificate-header {
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .certificate-header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .certificate-border {
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto;
+        }
+
+        .certificate-body {
+            position: relative;
+            z-index: 1;
+        }
+
+        .certificate-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+
+        .student-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 20px 0;
+            text-decoration: underline;
+            text-decoration-color: #667eea;
+        }
+
+        .certificate-details {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 25px 0;
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        .certificate-date {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 30px;
+            font-weight: 400;
+        }
+
+        .certificate-footer {
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .signature {
+            border-top: 2px solid #667eea;
+            padding-top: 15px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .certificate-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .screen {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            #question-text {
+                font-size: 2rem;
+            }
+
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+
+            .answer-btn {
+                font-size: 1.3rem;
+            }
+
+            .score-circle {
+                width: 120px;
+                height: 120px;
+            }
+
+            .score-circle span {
+                font-size: 1.5rem;
+            }
+
+            .certificate {
+                padding: 25px;
+            }
+
+            .certificate-header h1 {
+                font-size: 2rem;
+            }
+
+            .student-name {
+                font-size: 2rem;
+            }
+
+            .action-buttons,
+            .certificate-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* تحسينات إضافية */
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* تأثيرات خاصة للشهادة */
+        .certificate {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.05) 0%, transparent 50%);
+        }
+
+        /* تحسين مظهر SweetAlert */
+        .swal2-popup {
+            font-family: 'Cairo', sans-serif !important;
+            direction: rtl !important;
+        }
+
+        .swal2-title {
+            font-family: 'Cairo', sans-serif !important;
+        }
+
+        .swal2-content {
+            font-family: 'Cairo', sans-serif !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- شاشة البداية -->
+        <div id="start-screen" class="screen active">
+            <div class="header">
+                <h1>🎯 مسابقة جدول الضرب</h1>
+                <p>اختبر معرفتك بجدول الضرب واحصل على شهادة تقدير!</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="student-name">اسم الطالب:</label>
+                <input type="text" id="student-name" placeholder="أدخل اسمك هنا" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="table-select">اختر جدول الضرب:</label>
+                <select id="table-select">
+                    <option value="">-- اختر الجدول --</option>
+                    <option value="1">جدول الضرب 1</option>
+                    <option value="2">جدول الضرب 2</option>
+                    <option value="3">جدول الضرب 3</option>
+                    <option value="4">جدول الضرب 4</option>
+                    <option value="5">جدول الضرب 5</option>
+                    <option value="6">جدول الضرب 6</option>
+                    <option value="7">جدول الضرب 7</option>
+                    <option value="8">جدول الضرب 8</option>
+                    <option value="9">جدول الضرب 9</option>
+                    <option value="10">جدول الضرب 10</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="questions-count">عدد الأسئلة:</label>
+                <select id="questions-count">
+                    <option value="5">5 أسئلة</option>
+                    <option value="10" selected>10 أسئلة</option>
+                    <option value="15">15 سؤال</option>
+                </select>
+            </div>
+            
+            <button id="start-quiz" class="btn btn-primary">ابدأ المسابقة</button>
+        </div>
+
+        <!-- شاشة المسابقة -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-bar">
+                    <div id="progress" class="progress-fill"></div>
+                </div>
+                <div class="quiz-info">
+                    <span id="question-counter">السؤال 1 من 10</span>
+                    <span id="score-display">النقاط: 0</span>
+                </div>
+            </div>
+            
+            <div class="question-container">
+                <h2 id="question-text">2 × 3 = ?</h2>
+                <div class="answer-options">
+                    <button class="answer-btn" data-answer="1">5</button>
+                    <button class="answer-btn" data-answer="2">6</button>
+                    <button class="answer-btn" data-answer="3">7</button>
+                    <button class="answer-btn" data-answer="4">8</button>
+                </div>
+            </div>
+            
+            <div class="quiz-controls">
+                <button id="next-question" class="btn btn-secondary" style="display: none;">السؤال التالي</button>
+            </div>
+        </div>
+
+        <!-- شاشة النتائج -->
+        <div id="results-screen" class="screen">
+            <div class="results-container">
+                <h2>🎉 انتهت المسابقة!</h2>
+                <div class="score-summary">
+                    <div class="score-circle">
+                        <span id="final-score">8/10</span>
+                    </div>
+                    <p id="score-message">أحسنت! لقد حصلت على درجة ممتازة</p>
+                </div>
+                
+                <div class="results-details">
+                    <div class="stat">
+                        <span class="stat-label">الإجابات الصحيحة:</span>
+                        <span id="correct-answers">8</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">الإجابات الخاطئة:</span>
+                        <span id="wrong-answers">2</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">النسبة المئوية:</span>
+                        <span id="percentage">80%</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="generate-certificate" class="btn btn-primary">احصل على شهادة التقدير</button>
+                    <button id="restart-quiz" class="btn btn-secondary">إعادة المسابقة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- شاشة الشهادة -->
+        <div id="certificate-screen" class="screen">
+            <div class="certificate-container">
+                <div id="certificate" class="certificate">
+                    <div class="certificate-header">
+                        <h1>🏆 شهادة تقدير 🏆</h1>
+                        <div class="certificate-border"></div>
+                    </div>
+                    
+                    <div class="certificate-body">
+                        <p class="certificate-text">تُمنح هذه الشهادة إلى</p>
+                        <h2 id="certificate-name" class="student-name">اسم الطالب</h2>
+                        <p class="certificate-text">لإتمامه مسابقة جدول الضرب بنجاح</p>
+                        <p class="certificate-details">
+                            جدول الضرب: <span id="certificate-table">5</span><br>
+                            النتيجة: <span id="certificate-score">8/10</span><br>
+                            النسبة: <span id="certificate-percentage">80%</span>
+                        </p>
+                        <p class="certificate-date">التاريخ: <span id="certificate-date"></span></p>
+                    </div>
+                    
+                    <div class="certificate-footer">
+                        <div class="signature">
+                            <p>MathfunwithmrAbdelrazek</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certificate-actions">
+                    <button id="download-certificate" class="btn btn-primary">تحميل الشهادة</button>
+                    <button id="back-to-start" class="btn btn-secondary">العودة للبداية</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // متغيرات المسابقة
+        let currentQuestion = 0;
+        let score = 0;
+        let questions = [];
+        let selectedTable = 0;
+        let totalQuestions = 10;
+        let studentName = '';
+        let userAnswers = [];
+
+        // عناصر DOM
+        const screens = {
+            start: document.getElementById('start-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            results: document.getElementById('results-screen'),
+            certificate: document.getElementById('certificate-screen')
+        };
+
+        const elements = {
+            studentName: document.getElementById('student-name'),
+            tableSelect: document.getElementById('table-select'),
+            questionsCount: document.getElementById('questions-count'),
+            startQuiz: document.getElementById('start-quiz'),
+            questionText: document.getElementById('question-text'),
+            answerButtons: document.querySelectorAll('.answer-btn'),
+            nextQuestion: document.getElementById('next-question'),
+            questionCounter: document.getElementById('question-counter'),
+            scoreDisplay: document.getElementById('score-display'),
+            progress: document.getElementById('progress'),
+            finalScore: document.getElementById('final-score'),
+            scoreMessage: document.getElementById('score-message'),
+            correctAnswers: document.getElementById('correct-answers'),
+            wrongAnswers: document.getElementById('wrong-answers'),
+            percentage: document.getElementById('percentage'),
+            generateCertificate: document.getElementById('generate-certificate'),
+            restartQuiz: document.getElementById('restart-quiz'),
+            certificateName: document.getElementById('certificate-name'),
+            certificateTable: document.getElementById('certificate-table'),
+            certificateScore: document.getElementById('certificate-score'),
+            certificatePercentage: document.getElementById('certificate-percentage'),
+            certificateDate: document.getElementById('certificate-date'),
+            downloadCertificate: document.getElementById('download-certificate'),
+            backToStart: document.getElementById('back-to-start')
+        };
+
+        // وظائف المساعدة
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function generateRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // إنتاج الأسئلة
+        function generateQuestions() {
+            questions = [];
+            const usedNumbers = new Set();
+            
+            for (let i = 0; i < totalQuestions; i++) {
+                let multiplier;
+                do {
+                    multiplier = generateRandomNumber(1, 9);
+                } while (usedNumbers.has(multiplier) && usedNumbers.size < 9);
+                
+                usedNumbers.add(multiplier);
+                
+                const correctAnswer = selectedTable * multiplier;
+                const wrongAnswers = [];
+                
+                // إنتاج إجابات خاطئة
+                while (wrongAnswers.length < 3) {
+                    const wrongAnswer = correctAnswer + generateRandomNumber(-10, 10);
+                    if (wrongAnswer !== correctAnswer && wrongAnswer > 0 && !wrongAnswers.includes(wrongAnswer)) {
+                        wrongAnswers.push(wrongAnswer);
+                    }
+                }
+                
+                const allAnswers = [correctAnswer, ...wrongAnswers];
+                const shuffledAnswers = shuffleArray(allAnswers);
+                const correctIndex = shuffledAnswers.indexOf(correctAnswer);
+                
+                questions.push({
+                    question: `${selectedTable} × ${multiplier} = ?`,
+                    answers: shuffledAnswers,
+                    correctIndex: correctIndex,
+                    correctAnswer: correctAnswer
+                });
+            }
+        }
+
+        // عرض السؤال الحالي
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            elements.questionText.textContent = question.question;
+            
+            elements.answerButtons.forEach((btn, index) => {
+                btn.textContent = question.answers[index];
+                btn.classList.remove('correct', 'wrong', 'selected');
+                btn.disabled = false;
+                btn.onclick = () => selectAnswer(index);
+            });
+            
+            elements.questionCounter.textContent = `السؤال ${currentQuestion + 1} من ${totalQuestions}`;
+            elements.scoreDisplay.textContent = `النقاط: ${score}`;
+            
+            // تحديث شريط التقدم
+            const progressPercentage = ((currentQuestion) / totalQuestions) * 100;
+            elements.progress.style.width = `${progressPercentage}%`;
+            
+            elements.nextQuestion.style.display = 'none';
+        }
+
+        // اختيار الإجابة
+        function selectAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const isCorrect = selectedIndex === question.correctIndex;
+            
+            // تسجيل الإجابة
+            userAnswers.push({
+                question: question.question,
+                selectedAnswer: question.answers[selectedIndex],
+                correctAnswer: question.correctAnswer,
+                isCorrect: isCorrect
+            });
+            
+            // تعطيل جميع الأزرار
+            elements.answerButtons.forEach(btn => btn.disabled = true);
+            
+            // تلوين الإجابات
+            elements.answerButtons[selectedIndex].classList.add(isCorrect ? 'correct' : 'wrong');
+            if (!isCorrect) {
+                elements.answerButtons[question.correctIndex].classList.add('correct');
+            }
+            
+            // تحديث النقاط
+            if (isCorrect) {
+                score++;
+                elements.scoreDisplay.textContent = `النقاط: ${score}`;
+                
+                // إظهار رسالة تشجيعية للإجابة الصحيحة
+                Swal.fire({
+                    title: 'أحسنت! 🎉',
+                    text: 'إجابة صحيحة!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                // إظهار رسالة للإجابة الخاطئة
+                Swal.fire({
+                    title: 'للأسف 😔',
+                    text: `الإجابة الصحيحة هي: ${question.correctAnswer}`,
+                    icon: 'error',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+            
+            // إظهار زر السؤال التالي
+            setTimeout(() => {
+                elements.nextQuestion.style.display = 'block';
+            }, 1000);
+        }
+
+        // الانتقال للسؤال التالي
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < totalQuestions) {
+                displayQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // عرض النتائج
+        function showResults() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const wrongAnswers = totalQuestions - score;
+            
+            elements.finalScore.textContent = `${score}/${totalQuestions}`;
+            elements.correctAnswers.textContent = score;
+            elements.wrongAnswers.textContent = wrongAnswers;
+            elements.percentage.textContent = `${percentage}%`;
+            
+            // رسالة التقييم
+            let message = '';
+            let icon = '';
+            if (percentage >= 90) {
+                message = '🌟 ممتاز! أداء رائع جداً!';
+                icon = 'success';
+            } else if (percentage >= 80) {
+                message = '👏 جيد جداً! استمر في التقدم!';
+                icon = 'success';
+            } else if (percentage >= 70) {
+                message = '👍 جيد! يمكنك تحسين أدائك أكثر!';
+                icon = 'info';
+            } else if (percentage >= 60) {
+                message = '📚 مقبول، تحتاج لمزيد من التدريب!';
+                icon = 'warning';
+            } else {
+                message = '💪 لا تيأس! المزيد من التدريب سيحسن أداءك!';
+                icon = 'error';
+            }
+            
+            elements.scoreMessage.textContent = message;
+            
+            // إظهار رسالة النتيجة النهائية
+            Swal.fire({
+                title: 'انتهت المسابقة! 🎯',
+                text: `لقد حصلت على ${score} من ${totalQuestions} (${percentage}%)`,
+                icon: icon,
+                confirmButtonText: 'رائع!',
+                confirmButtonColor: '#667eea'
+            });
+            
+            showScreen('results');
+        }
+
+        // إنتاج الشهادة
+        function generateCertificate() {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const currentDate = new Date().toLocaleDateString('ar-SA');
+            
+            elements.certificateName.textContent = studentName;
+            elements.certificateTable.textContent = selectedTable;
+            elements.certificateScore.textContent = `${score}/${totalQuestions}`;
+            elements.certificatePercentage.textContent = `${percentage}%`;
+            elements.certificateDate.textContent = currentDate;
+            
+            showScreen('certificate');
+            
+            // رسالة تهنئة
+            Swal.fire({
+                title: 'تهانينا! 🏆',
+                text: 'تم إنتاج شهادة التقدير بنجاح!',
+                icon: 'success',
+                confirmButtonText: 'شكراً',
+                confirmButtonColor: '#667eea'
+            });
+        }
+
+        // تحميل الشهادة كصورة
+        function downloadCertificate() {
+            const certificate = document.getElementById('certificate');
+            
+            Swal.fire({
+                title: 'جاري تحضير الشهادة...',
+                text: 'يرجى الانتظار',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            html2canvas(certificate, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `شهادة_${studentName}_جدول_${selectedTable}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                Swal.fire({
+                    title: 'تم التحميل! 📥',
+                    text: 'تم تحميل شهادة التقدير بنجاح',
+                    icon: 'success',
+                    confirmButtonText: 'رائع!',
+                    confirmButtonColor: '#667eea'
+                });
+            }).catch(error => {
+                console.error('خطأ في تحميل الشهادة:', error);
+                Swal.fire({
+                    title: 'خطأ في التحميل',
+                    text: 'عذراً، حدث خطأ في تحميل الشهادة. يمكنك أخذ لقطة شاشة بدلاً من ذلك.',
+                    icon: 'error',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
+        }
+
+        // إعادة تشغيل المسابقة
+        function restartQuiz() {
+            Swal.fire({
+                title: 'إعادة تشغيل المسابقة؟',
+                text: 'هل تريد بدء مسابقة جديدة؟',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentQuestion = 0;
+                    score = 0;
+                    questions = [];
+                    userAnswers = [];
+                    
+                    elements.studentName.value = '';
+                    elements.tableSelect.value = '';
+                    elements.questionsCount.value = '10';
+                    
+                    showScreen('start');
+                }
+            });
+        }
+
+        // بدء المسابقة
+        function startQuiz() {
+            studentName = elements.studentName.value.trim();
+            selectedTable = parseInt(elements.tableSelect.value);
+            totalQuestions = parseInt(elements.questionsCount.value);
+            
+            // التحقق من صحة البيانات
+            if (!studentName) {
+                Swal.fire({
+                    title: 'اسم الطالب مطلوب',
+                    text: 'يرجى إدخال اسم الطالب',
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#ffc107'
+                });
+                return;
+            }
+            
+            if (!selectedTable) {
+                Swal.fire({
+                    title: 'اختيار الجدول مطلوب',
+                    text: 'يرجى اختيار جدول الضرب',
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#ffc107'
+                });
+                return;
+            }
+            
+            // رسالة ترحيب
+            Swal.fire({
+                title: `مرحباً ${studentName}! 👋`,
+                text: `استعد لاختبار جدول الضرب ${selectedTable}`,
+                icon: 'info',
+                confirmButtonText: 'لنبدأ!',
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                // إعداد المسابقة
+                currentQuestion = 0;
+                score = 0;
+                userAnswers = [];
+                
+                generateQuestions();
+                showScreen('quiz');
+                displayQuestion();
+            });
+        }
+
+        // ربط الأحداث
+        document.addEventListener('DOMContentLoaded', function() {
+            elements.startQuiz.addEventListener('click', startQuiz);
+            elements.nextQuestion.addEventListener('click', nextQuestion);
+            elements.generateCertificate.addEventListener('click', generateCertificate);
+            elements.restartQuiz.addEventListener('click', restartQuiz);
+            elements.downloadCertificate.addEventListener('click', downloadCertificate);
+            elements.backToStart.addEventListener('click', restartQuiz);
+            
+            // السماح ببدء المسابقة بالضغط على Enter
+            elements.studentName.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startQuiz();
+                }
+            });
+            
+            // رسالة ترحيب عند تحميل الصفحة
+            Swal.fire({
+                title: 'أهلاً وسهلاً! 🎯',
+                text: 'مرحباً بك في مسابقة جدول الضرب التفاعلية',
+                icon: 'info',
+                confirmButtonText: 'ابدأ الآن',
+                confirmButtonColor: '#667eea',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+</body>
+</html>
+
